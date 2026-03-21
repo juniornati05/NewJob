@@ -441,8 +441,8 @@ const courses = {
       { title: "Deploy MERN App to Heroku", url: "https://youtu.be/4D1MkwYfJfo" },
       { title: "AI for Web Developers (Google AI)", url: "https://youtu.be/1f1h0_uvmUY" }
     ],
-    pdfUrl: "https://t.me/skillswapethiopia_group",
-    telegramGroup: "https://t.me/skillswapethiopia_group"
+    pdfUrl: "https://t.me/skillswapethiopia",
+    telegramGroup: "https://t.me/skillswapethiopia"
   },
   marketing: {
     title: "Digital Marketing",
@@ -467,8 +467,8 @@ const courses = {
       { title: "Google Ads Complete Course", url: "https://youtu.be/2U2z7VjYxTo" },
       { title: "E-commerce Marketing Strategies", url: "https://youtu.be/3bFv2M7JhAg" }
     ],
-    pdfUrl: "https://t.me/skillswapethiopia_group",
-    telegramGroup: "https://t.me/skillswapethiopia_group"
+    pdfUrl: "https://t.me/skillswapethiopia",
+    telegramGroup: "https://t.me/skillswapethiopia"
   },
   agritech: {
     title: "Smart Farming & Agri-tech",
@@ -493,8 +493,8 @@ const courses = {
       { title: "Digital Tools for Farmers (FAO)", url: "https://youtu.be/3J8Z7T0uM8w" },
       { title: "Agricultural Finance & Grants", url: "https://youtu.be/4A1Rq1VqH7k" }
     ],
-    pdfUrl: "https://t.me/skillswapethiopia_group",
-    telegramGroup: "https://t.me/skillswapethiopia_group"
+    pdfUrl: "https://t.me/skillswapethiopia",
+    telegramGroup: "https://t.me/skillswapethiopia"
   },
   business: {
     title: "Business Management & Leadership",
@@ -519,8 +519,8 @@ const courses = {
       { title: "Entrepreneurship 101 (Stanford)", url: "https://youtu.be/2P6d6p7KjGc" },
       { title: "Business Ethics (TEDx)", url: "https://youtu.be/1o5VZgQzC1c" }
     ],
-    pdfUrl: "https://t.me/skillswapethiopia_group",
-    telegramGroup: "https://t.me/skillswapethiopia_group"
+    pdfUrl: "https://t.me/skillswapethiopia",
+    telegramGroup: "https://t.me/skillswapethiopia"
   }
 };
 

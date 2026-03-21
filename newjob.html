@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>SkillSwap Ethiopia | AI-Powered Jobs & Skills Platform</title>
+  <link rel="stylesheet" href="newjob.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <div class="navbar container">
+    <div class="logo" data-page="home">
+      <i class="fas fa-hands-helping"></i>
+      <h1>SkillSwap 🇪🇹 Ethiopia</h1>
+    </div>
+    <div class="nav-links">
+      <a data-page="home" class="active">Home</a>
+      <a data-page="aitest">AI Skill Test</a>
+      <a data-page="learnearn">Learn → Earn</a>
+      <a data-page="offlineai">Offline + AI SMS</a>
+      <a data-page="jobs">Jobs</a>
+      <a data-page="jobdetail" style="display:none;">Job Detail</a>
+      <a data-page="coursedetail" style="display:none;">Course Detail</a>
+    </div>
+    <div id="userProfilePlaceholder"></div>
+  </div>
+
+  <main>
+    <!-- HOME PAGE -->
+    <div id="home-page" class="page active-page">
+      <div class="container">
+        <div class="hero">
+          <div class="hero-text">
+            <span class="badge" style="background:rgba(218,165,32,0.2); padding:6px 16px; border-radius:40px; display:inline-block; margin-bottom:24px;"><i class="fas fa-chart-line"></i> Ethiopia's future workforce</span>
+            <h2>Learn skills.<br>Get matched.<br>Earn instantly.</h2>
+            <p>SkillSwap Ethiopia bridges youth unemployment with AI-powered job matching, offline access & learn-to-earn model. 🇪🇹 Built for every Ethiopian, from Addis to rural communities.</p>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+              <button class="btn-primary" data-page="aitest"><i class="fas fa-microchip"></i> Take AI Skill Test</button>
+              <button class="btn-outline" data-page="offlineai"><i class="fas fa-sms"></i> Offline via SMS/Telegram</button>
+            </div>
+            <div class="hero-stats">
+              <div class="stat"><h3>10k+</h3><p>Trained youth</p></div>
+              <div class="stat"><h3>87%</h3><p>Placement rate</p></div>
+              <div class="stat"><h3>150+</h3><p>Partner employers</p></div>
+            </div>
+          </div>
+          <div class="hero-image"><i class="fas fa-people-arrows"></i></div>
+        </div>
+        <div class="section-header"><h3>Why SkillSwap is the 🇪🇹 game-changer</h3><p>Designed for impact, accessibility, and instant employment</p></div>
+        <div class="feature-grid">
+          <div class="feature-card"><div class="feature-icon"><i class="fas fa-brain"></i></div><h4>AI Skill Test</h4><p>Instant career match based on your strengths.</p></div>
+          <div class="feature-card"><div class="feature-icon"><i class="fas fa-satellite-dish"></i></div><h4>Offline Mode</h4><p>Telegram bot & SMS gateway — no internet? No problem.</p></div>
+          <div class="feature-card"><div class="feature-icon"><i class="fas fa-graduation-cap"></i></div><h4>Learn → Earn System</h4><p>Complete courses → verified → direct interviews.</p></div>
+        </div>
+        <div class="social-bottom">
+          <h4>🇪🇹 Join our community & stay connected</h4>
+          <div class="social-icons">
+            <a href="https://t.me/skillswapethiopia" target="_blank" rel="noopener noreferrer"><i class="fab fa-telegram"></i></a>
+            <a href="https://instagram.com/skillswapethiopia" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+            <a href="https://twitter.com/skillswapeth" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i></a>
+          </div>
+          <p style="margin-top:12px;">Follow us for daily job alerts, course updates, and success stories.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI SKILL TEST PAGE -->
+    <div id="aitest-page" class="page">
+      <div class="container">
+        <div class="section-header"><h3>🤖 AI Skill-Fit Test</h3><p>Answer 2 quick questions — our AI scans your profile and matches you with real jobs instantly</p></div>
+        <div class="test-card">
+          <div class="form-group"><label><i class="fas fa-code"></i> 1. What excites you most?</label>
+            <div class="radio-group" id="q1Group">
+              <label><input type="radio" name="interest" value="tech"> 💻 Coding & Tech</label>
+              <label><input type="radio" name="interest" value="design"> 🎨 Design & Creativity</label>
+              <label><input type="radio" name="interest" value="agri"> 🌾 Agriculture & Environment</label>
+              <label><input type="radio" name="interest" value="business"> 📊 Business & Leadership</label>
+            </div>
+          </div>
+          <div class="form-group"><label><i class="fas fa-users"></i> 2. How do you prefer to work?</label>
+            <div class="radio-group" id="q2Group">
+              <label><input type="radio" name="style" value="solo"> 🧠 Solo & deep focus</label>
+              <label><input type="radio" name="style" value="team"> 🤝 Team collaboration</label>
+              <label><input type="radio" name="style" value="company"> 🏢 In a company/organization</label>
+            </div>
+          </div>
+          <button class="btn-primary" id="runAiTestBtn"><i class="fas fa-chart-simple"></i> Analyze my profile → Get job match</button>
+          <div id="aiResultContainer" class="result-area" style="display: none;"><div id="aiMatchText"></div><div id="aiRecommendCourse"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEARN → EARN PAGE (courses) -->
+    <div id="learnearn-page" class="page">
+      <div class="container">
+        <div class="section-header"><h3>📚 Learn → Earn Pathway</h3><p>Study high-demand courses & land a job directly through SkillSwap partners</p></div>
+        <div class="courses-grid" id="coursesGrid">
+          <div class="course-card" data-course="webdev">
+            <div class="course-info">
+              <span class="earn-badge"><i class="fas fa-briefcase"></i> Job guarantee track</span>
+              <h4>Full-Stack Web Dev</h4>
+              <p>MERN + AI tools. Graduate → matched with Ethio Tech startups.</p>
+              <i class="fas fa-trophy" style="color:gold"></i> Avg salary: 18,000 ETB
+            </div>
+          </div>
+          <div class="course-card" data-course="marketing">
+            <div class="course-info">
+              <span class="earn-badge"><i class="fas fa-chart-line"></i> Earn while you learn</span>
+              <h4>Digital Marketing</h4>
+              <p>SEO, Social Media, E-commerce. Internships at Ethio brands.</p>
+            </div>
+          </div>
+          <div class="course-card" data-course="agritech">
+            <div class="course-info">
+              <span class="earn-badge"><i class="fas fa-seedling"></i> Agri-tech</span>
+              <h4>Smart Farming</h4>
+              <p>Irrigation, drones, agribusiness. Direct hiring by cooperatives.</p>
+            </div>
+          </div>
+          <div class="course-card" data-course="business">
+            <div class="course-info">
+              <span class="earn-badge"><i class="fas fa-handshake"></i> Leadership path</span>
+              <h4>Business Management</h4>
+              <p>Project management, finance. Guaranteed interview with partners.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COURSE DETAIL PAGE (dynamic) -->
+    <div id="coursedetail-page" class="page">
+      <div class="container">
+        <div class="course-detail-container" id="courseDetailContainer">
+          <!-- dynamic content -->
+        </div>
+        <div style="text-align: center; margin: 20px 0;">
+          <button id="backToCoursesBtn" class="btn-outline"><i class="fas fa-arrow-left"></i> Back to Courses</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFFLINE + AI SMS PAGE -->
+    <div id="offlineai-page" class="page">
+      <div class="container">
+        <div class="section-header"><h3>📱 Offline Access: SMS + AI Assistant</h3><p>Even without internet — send an SMS to <strong>+251 900 818 678</strong> and get instant AI replies. Or chat live below.</p></div>
+        <div class="offline-sim">
+          <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px;"><i class="fab fa-telegram" style="font-size: 2rem;"></i><i class="fas fa-sms" style="font-size: 2rem;"></i><h3 style="margin:0;">AI SMS Assistant</h3></div>
+          <div class="chat-mock">
+            <p><i class="fas fa-robot"></i> <strong>Official Number:</strong> <span style="background:#2C5F2D; padding:4px 12px; border-radius:40px;">+251900818678</span> — Ask about jobs, courses, or type "help" for menu.</p>
+            <div class="sms-input">
+              <input type="text" id="smsMessageInput" placeholder="e.g., 'Jobs in Addis', 'help'">
+              <button id="sendSmsBtn" class="btn-primary"><i class="fas fa-paper-plane"></i> Send SMS</button>
+            </div>
+            <div class="ai-chat-box" id="aiChatBox">
+              <div class="message ai"><div class="bubble">👋 Hello! I'm SkillSwap AI. Type "help" to see what I can do. 🇪🇹</div></div>
+            </div>
+            <p style="font-size:0.75rem; margin-top:12px;"><i class="fas fa-globe"></i> For general inquiries, please call +251900818678.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOBS PAGE -->
+    <div id="jobs-page" class="page">
+      <div class="container">
+        <div class="section-header"><h3>🔥 Real Jobs — Matched Instantly</h3><p id="activeFilterLabel">All opportunities</p></div>
+        <div id="jobListContainer" class="job-list"></div>
+        <div style="text-align: center; margin: 24px 0;"><button id="resetJobsBtn" class="btn-outline"><i class="fas fa-sync-alt"></i> Show all jobs</button></div>
+      </div>
+    </div>
+
+    <!-- JOB DETAIL PAGE -->
+    <div id="jobdetail-page" class="page">
+      <div class="container">
+        <div class="job-detail-container" id="jobDetailContainer">
+          <!-- dynamic -->
+        </div>
+        <div style="text-align: center; margin: 20px 0;">
+          <button id="backToJobsBtn" class="btn-outline"><i class="fas fa-arrow-left"></i> Back to Jobs</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 24px;">
+      <div><i class="fas fa-handshake"></i> SkillSwap Ethiopia © 2025 — bridging talents & opportunities</div>
+      <div>📧 hello@skillswapethiopia.com  |  📞 +251-900-818-678 (AI SMS line)</div>
+    </div>
+  </footer>
+
+  <script src="newjob.js"></script>
+</body>
+</html>

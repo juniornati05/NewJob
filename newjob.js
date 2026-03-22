@@ -1,4 +1,3 @@
-// -------------------- USER MANAGEMENT --------------------
 let currentUser = null;
 let users = [];
 
@@ -67,7 +66,7 @@ function updateUIForUser() {
   }
 }
 
-// ---------- LOGIN MODAL ----------
+
 function showLoginModal() {
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
@@ -113,7 +112,7 @@ function showLoginModal() {
   };
 }
 
-// ---------- Registration Modal with Password ----------
+
 function showRegistrationModal() {
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
@@ -250,7 +249,7 @@ function showRegistrationModal() {
   modal.querySelector('#backStep3').onclick = () => showStep(3);
   modal.querySelector('#backStep4').onclick = () => showStep(4);
 
-  // ID preview
+
   modal.querySelector('#idPhoto').addEventListener('change', function(e) {
     let preview = modal.querySelector('#idPreview');
     preview.innerHTML = '';
@@ -264,7 +263,7 @@ function showRegistrationModal() {
     }
   });
 
-  // Complete registration after payment
+
   modal.querySelector('#completePayment').onclick = () => {
     alert('✅ Payment simulated successfully! 50 ETB registration fee received. You now have full access to SkillSwap Ethiopia.');
     let newUser = {
@@ -298,7 +297,7 @@ function showRegistrationModal() {
   };
 }
 
-// -------------------- Page Navigation & Global Features --------------------
+
 const pages = {
   home: document.getElementById('home-page'),
   aitest: document.getElementById('aitest-page'),
@@ -327,7 +326,7 @@ document.querySelectorAll('.nav-links a, [data-page]').forEach(el => {
 });
 document.querySelector('.logo')?.addEventListener('click', () => showPage('home'));
 
-// ---------- JOB DATA & FILTER ----------
+
 const allJobs = [
   { id: 1, title: "Junior Full Stack Developer", company: "IceAddis Tech", category: "tech", location: "Addis Ababa", salary: "15k-22k ETB", desc: "React + Node.js, fresh grads welcome", requirements: "1+ year experience with MERN stack, good problem-solving skills, team player.", benefits: "Health insurance, remote work options, professional development budget." },
   { id: 2, title: "UI/UX Designer", company: "Creative Hub Ethiopia", category: "design", location: "Remote", salary: "12k-18k ETB", desc: "Figma, portfolio building", requirements: "Portfolio showcasing UI/UX projects, proficiency in Figma, understanding of user-centered design.", benefits: "Flexible hours, creative team environment." },
@@ -401,7 +400,7 @@ document.getElementById("resetJobsBtn")?.addEventListener("click", () => { curre
 document.getElementById("backToJobsBtn")?.addEventListener("click", () => showPage('jobs'));
 renderJobs();
 
-// ---------- AI Skill Test ----------
+
 document.getElementById("runAiTestBtn")?.addEventListener("click", () => {
   const selectedInterest = document.querySelector('#aitest-page input[name="interest"]:checked');
   if (!selectedInterest) { alert("🇪🇹 Please select your main interest field to unlock AI job match!"); return; }
@@ -416,7 +415,7 @@ document.getElementById("runAiTestBtn")?.addEventListener("click", () => {
   showPage('jobs');
 });
 
-// ---------- Course Detail with REAL YouTube Videos ----------
+
 const courses = {
   webdev: {
     title: "Full-Stack Web Development",
@@ -558,7 +557,7 @@ document.querySelectorAll('.course-card').forEach(card => {
 });
 document.getElementById('backToCoursesBtn')?.addEventListener('click', () => showPage('learnearn'));
 
-// ---------- AI SMS Assistant ----------
+
 const chatBox = document.getElementById("aiChatBox");
 const smsInput = document.getElementById("smsMessageInput");
 const sendBtn = document.getElementById("sendSmsBtn");
@@ -639,7 +638,7 @@ if (sendBtn) {
   smsInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendBtn.click(); });
 }
 
-// Initialize
+
 loadUsers();
 currentUser = getCurrentUser();
 updateUIForUser();

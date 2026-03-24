@@ -1,55 +1,328 @@
-let currentUser = null;
-let users = [];
+const DB_NAME = 'SkillSwapDB';
+const DB_VERSION = 1;
+let db = null;
 
-function loadUsers() {
-  const stored = localStorage.getItem('skillswap_users');
-  if (stored) {
-    try {
-      users = JSON.parse(stored);
-    } catch (e) { users = []; }
-  } else {
-    users = [];
+
+function initDatabase() {
+  return new Promise((resolve, reject) => {
+    if (db) {
+      resolve(db);
+      return;
+    }
+    
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    
+    request.onerror = (event) => {
+      console.error('Database error:', event.target.error);
+      reject('Could not open database');
+    };
+    
+    request.onsuccess = (event) => {
+      db = event.target.result;
+      console.log('✅ Database opened successfully');
+      resolve(db);
+    };
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      
+
+      if (!db.objectStoreNames.contains('users')) {
+        const userStore = db.createObjectStore('users', { keyPath: 'email' });
+        userStore.createIndex('email', 'email', { unique: true });
+        console.log('✅ Users store created');
+      }
+      
+
+      if (!db.objectStoreNames.contains('jobs')) {
+        const jobStore = db.createObjectStore('jobs', { keyPath: 'id', autoIncrement: true });
+        jobStore.createIndex('category', 'category');
+        console.log('✅ Jobs store created');
+      }
+      
+
+      if (!db.objectStoreNames.contains('courses')) {
+        db.createObjectStore('courses', { keyPath: 'id' });
+        console.log('✅ Courses store created');
+      }
+      
+
+      if (!db.objectStoreNames.contains('session')) {
+        db.createObjectStore('session', { keyPath: 'id' });
+        console.log('✅ Session store created');
+      }
+    };
+  });
+}
+
+
+async function addToStore(storeName, data) {
+  const database = await initDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([storeName], 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.add(data);
+    
+    request.onsuccess = () => resolve(data);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getFromStore(storeName, key) {
+  const database = await initDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([storeName], 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = store.get(key);
+    
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getAllFromStore(storeName, indexName = null, indexValue = null) {
+  const database = await initDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([storeName], 'readonly');
+    const store = transaction.objectStore(storeName);
+    let request;
+    
+    if (indexName && indexValue) {
+      const index = store.index(indexName);
+      request = index.getAll(indexValue);
+    } else {
+      request = store.getAll();
+    }
+    
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function updateInStore(storeName, data) {
+  const database = await initDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([storeName], 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.put(data);
+    
+    request.onsuccess = () => resolve(data);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function deleteFromStore(storeName, key) {
+  const database = await initDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([storeName], 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.delete(key);
+    
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+
+async function seedInitialData() {
+  // Check if jobs already exist
+  const existingJobs = await getAllFromStore('jobs');
+  if (existingJobs.length === 0) {
+    const initialJobs = [
+      {
+        id: 1,
+        title: "Junior Full Stack Developer",
+        company: "IceAddis Tech",
+        category: "tech",
+        location: "Addis Ababa",
+        salary: "15k-22k ETB",
+        description: "React + Node.js, fresh grads welcome. Join a dynamic team building innovative solutions for Ethiopian businesses.",
+        requirements: "1+ year experience with MERN stack, good problem-solving skills, team player. Fresh graduates with strong portfolio are encouraged to apply.",
+        benefits: "Health insurance, remote work options, professional development budget, mentorship program.",
+        isActive: true,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 2,
+        title: "UI/UX Designer",
+        company: "Creative Hub Ethiopia",
+        category: "design",
+        location: "Remote",
+        salary: "12k-18k ETB",
+        description: "Create beautiful and intuitive designs for web and mobile applications. Work with international clients.",
+        requirements: "Portfolio showcasing UI/UX projects, proficiency in Figma, understanding of user-centered design principles.",
+        benefits: "Flexible hours, creative team environment, equipment allowance, annual retreat.",
+        isActive: true,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 3,
+        title: "AgriTech Officer",
+        company: "Green Ethiopia PLC",
+        category: "agri",
+        location: "Hawassa",
+        salary: "10k-15k ETB",
+        description: "Implement smart irrigation systems and provide agricultural extension services to rural communities.",
+        requirements: "Degree in agriculture or related field, experience with irrigation systems, willingness to travel to rural areas.",
+        benefits: "Accommodation support, field training, vehicle allowance, performance bonuses.",
+        isActive: true,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 4,
+        title: "Business Development Associate",
+        company: "Ethio Export Group",
+        category: "business",
+        location: "Addis Ababa",
+        salary: "14k-20k ETB",
+        description: "Drive business growth through strategic partnerships and market expansion initiatives.",
+        requirements: "Sales experience, strong communication skills, knowledge of Ethiopian export market, degree in business or related field.",
+        benefits: "Performance bonuses, career growth opportunities, international travel, health insurance.",
+        isActive: true,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 5,
+        title: "Frontend Developer (React)",
+        company: "Kifiya Financial Technology",
+        category: "tech",
+        location: "Addis Ababa",
+        salary: "20k-28k ETB",
+        description: "Build responsive and performant web applications for financial services sector.",
+        requirements: "Strong React skills, experience with state management (Redux/Zustand), TypeScript knowledge, fintech background a plus.",
+        benefits: "Stock options, premium health coverage, gym membership, learning budget.",
+        isActive: true,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 6,
+        title: "Graphic Designer",
+        company: "Roha Media Solutions",
+        category: "design",
+        location: "Bahir Dar",
+        salary: "9k-14k ETB",
+        description: "Create engaging visual content for social media, print, and digital campaigns.",
+        requirements: "Adobe Creative Suite proficiency, creative mindset, social media design experience, portfolio required.",
+        benefits: "Creative freedom, company events, professional development, equipment provided.",
+        isActive: true,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 7,
+        title: "Sustainable Farming Specialist",
+        company: "EthioAgri Corporation",
+        category: "agri",
+        location: "Jimma",
+        salary: "11k-16k ETB",
+        description: "Implement sustainable farming practices and conduct research on crop optimization.",
+        requirements: "Agronomy background, experience with coffee farming, sustainable practices knowledge, research experience.",
+        benefits: "Housing allowance, research opportunities, conference travel, academic partnerships.",
+        isActive: true,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 8,
+        title: "Sales Team Lead",
+        company: "Zemen Logistics",
+        category: "business",
+        location: "Dire Dawa",
+        salary: "16k-22k ETB",
+        description: "Lead and motivate sales team to achieve targets and expand market presence.",
+        requirements: "Proven sales track record, leadership skills, logistics experience preferred, team management experience.",
+        benefits: "Commission structure, travel allowance, performance bonuses, leadership training.",
+        isActive: true,
+        createdAt: new Date().toISOString()
+      }
+    ];
+    
+    for (const job of initialJobs) {
+      await addToStore('jobs', job);
+    }
+    console.log('✅ Initial jobs seeded');
   }
 }
 
-function saveUsers() {
-  localStorage.setItem('skillswap_users', JSON.stringify(users));
-}
 
-function findUserByEmail(email) {
-  return users.find(u => u.email.toLowerCase() === email.toLowerCase());
-}
-
-function authenticateUser(email, password) {
-  const user = findUserByEmail(email);
-  if (user && user.password === password) {
-    return user;
+async function authenticateUser(email, password) {
+  try {
+    const user = await getFromStore('users', email);
+    if (user && user.password === password) {
+      // Store session
+      await updateInStore('session', { id: 'current', user: user });
+      return user;
+    }
+    return null;
+  } catch (error) {
+    console.error('Login error:', error);
+    return null;
   }
-  return null;
 }
 
-function saveCurrentUser(user) {
-  currentUser = user;
-  localStorage.setItem('skillswap_current_user', JSON.stringify(user));
-}
+async function registerUser(userData) {
+  try {
+    // Check if user already exists
+    const existingUser = await getFromStore('users', userData.email);
+    if (existingUser) {
+      throw new Error('User already exists with this email');
+    }
+    
 
-function getCurrentUser() {
-  const stored = localStorage.getItem('skillswap_current_user');
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch (e) { return null; }
+    await addToStore('users', userData);
+    
+
+    await updateInStore('session', { id: 'current', user: userData });
+    
+    return userData;
+  } catch (error) {
+    console.error('Registration error:', error);
+    throw error;
   }
-  return null;
+}
+
+async function getCurrentUserFromDB() {
+  try {
+    const session = await getFromStore('session', 'current');
+    return session ? session.user : null;
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
 }
 
 function logout() {
-  localStorage.removeItem('skillswap_current_user');
+  updateInStore('session', { id: 'current', user: null });
   currentUser = null;
   location.reload();
 }
 
-function updateUIForUser() {
+
+async function getAllJobs(category = null) {
+  try {
+    let jobs = await getAllFromStore('jobs');
+    if (category) {
+      jobs = jobs.filter(job => job.category === category && job.isActive);
+    } else {
+      jobs = jobs.filter(job => job.isActive);
+    }
+    return jobs;
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    return [];
+  }
+}
+
+async function getJobById(jobId) {
+  try {
+    const jobs = await getAllFromStore('jobs');
+    return jobs.find(job => job.id === parseInt(jobId));
+  } catch (error) {
+    console.error('Error fetching job:', error);
+    return null;
+  }
+}
+
+
+async function updateUIForUser() {
   const placeholder = document.getElementById('userProfilePlaceholder');
   if (currentUser) {
     placeholder.innerHTML = `
@@ -73,7 +346,7 @@ function showLoginModal() {
   modal.innerHTML = `
     <div class="modal-container">
       <div style="text-align: right; margin-bottom: 16px;"><button id="closeLoginBtn" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button></div>
-      <h3>Welcome Back</h3>
+      <h3>Welcome Back to SkillSwap Ethiopia 🇪🇹</h3>
       <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
       <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="Enter your password"></div>
       <button class="btn-primary" id="loginBtn" style="width:100%;">Login</button>
@@ -88,16 +361,17 @@ function showLoginModal() {
     modal.remove();
     showRegistrationModal();
   };
-  modal.querySelector('#loginBtn').onclick = () => {
+  
+  modal.querySelector('#loginBtn').onclick = async () => {
     const email = modal.querySelector('#loginEmail').value.trim();
     const password = modal.querySelector('#loginPassword').value;
     if (!email || !password) {
       alert('Please enter both email and password.');
       return;
     }
-    const user = authenticateUser(email, password);
+    
+    const user = await authenticateUser(email, password);
     if (user) {
-      saveCurrentUser(user);
       modal.remove();
       currentUser = user;
       updateUIForUser();
@@ -111,7 +385,6 @@ function showLoginModal() {
     }
   };
 }
-
 
 function showRegistrationModal() {
   const modal = document.createElement('div');
@@ -184,9 +457,9 @@ function showRegistrationModal() {
           </select>
         </div>
         <div id="paymentSimulation" style="background: #f0f2e5; padding: 16px; border-radius: 24px; margin: 16px 0;">
-          <p><i class="fas fa-info-circle"></i> <strong>Demo Mode:</strong> Click "Pay Now" to simulate payment. In production, this would connect to a real payment gateway.</p>
+          <p><i class="fas fa-info-circle"></i> <strong>Demo Mode:</strong> Click "Pay Now" to simulate payment. This is a free offline version.</p>
         </div>
-        <button class="btn-primary" id="completePayment">Pay 50 ETB & Complete Registration</button>
+        <button class="btn-primary" id="completePayment">Complete Registration (Free)</button>
         <button class="btn-outline" id="backStep4">← Back</button>
       </div>
     </div>
@@ -215,14 +488,21 @@ function showRegistrationModal() {
     if (!phone || phone.length < 10) { alert('Please enter a valid phone number'); return false; }
     if (!password || password.length < 4) { alert('Password must be at least 4 characters'); return false; }
     if (password !== confirm) { alert('Passwords do not match'); return false; }
-    if (findUserByEmail(email)) { alert('An account with this email already exists. Please login.'); return false; }
     return true;
   }
+  
   function validateStep2() {
     let file = modal.querySelector('#idPhoto').files[0];
-    if (!file) { alert('Please upload a photo of your ID'); return false; }
+    if (!file) { 
+      // Make ID photo optional for offline version
+      if (confirm('ID photo is optional. Continue without it?')) {
+        return true;
+      }
+      return false;
+    }
     return true;
   }
+  
   function validateStep3() {
     let interest = modal.querySelector('input[name="interest"]:checked');
     let style = modal.querySelector('input[name="style"]:checked');
@@ -230,6 +510,7 @@ function showRegistrationModal() {
     if (!style) { alert('Please select your work style'); return false; }
     return true;
   }
+  
   function validateStep4() {
     let followedTele = modal.querySelector('#followedTelegram').checked;
     let followedInsta = modal.querySelector('#followedInstagram').checked;
@@ -249,7 +530,7 @@ function showRegistrationModal() {
   modal.querySelector('#backStep3').onclick = () => showStep(3);
   modal.querySelector('#backStep4').onclick = () => showStep(4);
 
-
+  // Handle ID photo preview
   modal.querySelector('#idPhoto').addEventListener('change', function(e) {
     let preview = modal.querySelector('#idPreview');
     preview.innerHTML = '';
@@ -264,31 +545,53 @@ function showRegistrationModal() {
   });
 
 
-  modal.querySelector('#completePayment').onclick = () => {
-    alert('✅ Payment simulated successfully! 50 ETB registration fee received. You now have full access to SkillSwap Ethiopia.');
-    let newUser = {
-      name: modal.querySelector('#regName').value.trim(),
-      age: parseInt(modal.querySelector('#regAge').value),
-      email: modal.querySelector('#regEmail').value.trim(),
-      phone: modal.querySelector('#regPhone').value.trim(),
-      password: modal.querySelector('#regPassword').value,
-      interest: modal.querySelector('input[name="interest"]:checked').value,
-      workStyle: modal.querySelector('input[name="style"]:checked').value,
-      registeredAt: new Date().toISOString(),
-      paymentCompleted: true
-    };
-    users.push(newUser);
-    saveUsers();
-    saveCurrentUser(newUser);
-    modal.remove();
-    currentUser = newUser;
-    updateUIForUser();
-    if (currentUser.interest) {
-      currentCategoryFilter = currentUser.interest;
-      renderJobs();
+  modal.querySelector('#completePayment').onclick = async () => {
+    try {
+      const idPhoto = modal.querySelector('#idPhoto').files[0];
+      let idPhotoData = null;
+      
+      // Convert image to base64 for storage
+      if (idPhoto) {
+        idPhotoData = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(idPhoto);
+        });
+      }
+      
+      const newUser = {
+        name: modal.querySelector('#regName').value.trim(),
+        age: parseInt(modal.querySelector('#regAge').value),
+        email: modal.querySelector('#regEmail').value.trim(),
+        phone: modal.querySelector('#regPhone').value.trim(),
+        password: modal.querySelector('#regPassword').value,
+        interest: modal.querySelector('input[name="interest"]:checked').value,
+        workStyle: modal.querySelector('input[name="style"]:checked').value,
+        paymentMethod: modal.querySelector('#paymentMethod').value,
+        followedTelegram: modal.querySelector('#followedTelegram').checked,
+        followedInstagram: modal.querySelector('#followedInstagram').checked,
+        paymentCompleted: true,
+        idPhoto: idPhotoData,
+        registeredAt: new Date().toISOString()
+      };
+      
+      const result = await registerUser(newUser);
+      if (result) {
+        alert('✅ Registration successful! Welcome to SkillSwap Ethiopia!');
+        modal.remove();
+        currentUser = result;
+        updateUIForUser();
+        if (currentUser.interest) {
+          currentCategoryFilter = currentUser.interest;
+          await renderJobs();
+        }
+        showPage('home');
+      }
+    } catch (error) {
+      alert('Registration failed: ' + error.message);
     }
-    showPage('home');
   };
+  
   modal.querySelector('#closeModalBtn').onclick = () => modal.remove();
   modal.querySelector('#gotoLogin').onclick = (e) => {
     e.preventDefault();
@@ -327,42 +630,44 @@ document.querySelectorAll('.nav-links a, [data-page]').forEach(el => {
 document.querySelector('.logo')?.addEventListener('click', () => showPage('home'));
 
 
-const allJobs = [
-  { id: 1, title: "Junior Full Stack Developer", company: "IceAddis Tech", category: "tech", location: "Addis Ababa", salary: "15k-22k ETB", desc: "React + Node.js, fresh grads welcome", requirements: "1+ year experience with MERN stack, good problem-solving skills, team player.", benefits: "Health insurance, remote work options, professional development budget." },
-  { id: 2, title: "UI/UX Designer", company: "Creative Hub Ethiopia", category: "design", location: "Remote", salary: "12k-18k ETB", desc: "Figma, portfolio building", requirements: "Portfolio showcasing UI/UX projects, proficiency in Figma, understanding of user-centered design.", benefits: "Flexible hours, creative team environment." },
-  { id: 3, title: "AgriTech Officer", company: "Green Ethiopia PLC", category: "agri", location: "Hawassa", salary: "10k-15k ETB", desc: "Smart irrigation & extension services", requirements: "Degree in agriculture or related, experience with irrigation systems, willingness to travel to rural areas.", benefits: "Accommodation support, field training." },
-  { id: 4, title: "Business Development Associate", company: "Ethio Export Group", category: "business", location: "Addis", salary: "14k-20k ETB", desc: "Sales, partnership growth", requirements: "Sales experience, strong communication skills, knowledge of Ethiopian export market.", benefits: "Performance bonuses, career growth opportunities." },
-  { id: 5, title: "Frontend Developer (React)", company: "Kifiya Financial", category: "tech", location: "Addis Ababa", salary: "20k-28k ETB", desc: "Fintech, high growth", requirements: "Strong React skills, experience with state management, fintech background a plus.", benefits: "Stock options, premium health coverage." },
-  { id: 6, title: "Graphic Designer", company: "Roha Media", category: "design", location: "Bahir Dar", salary: "9k-14k ETB", desc: "Social media creatives", requirements: "Adobe Creative Suite, creative mindset, social media design experience.", benefits: "Creative freedom, company events." },
-  { id: 7, title: "Sustainable Farming Specialist", company: "EthioAgri Corp", category: "agri", location: "Jimma", salary: "11k-16k ETB", desc: "Coffee & crop management", requirements: "Agronomy background, experience with coffee farming, sustainable practices.", benefits: "Housing allowance, research opportunities." },
-  { id: 8, title: "Sales Team Lead", company: "Zemen Logistics", category: "business", location: "Dire Dawa", salary: "16k-22k ETB", desc: "B2B sales", requirements: "Proven sales track record, leadership skills, logistics experience preferred.", benefits: "Commission structure, travel allowance." }
-];
-let currentCategoryFilter = null;
-
-function renderJobs() {
+async function renderJobs() {
   const container = document.getElementById("jobListContainer");
   if (!container) return;
-  let filtered = currentCategoryFilter ? allJobs.filter(job => job.category === currentCategoryFilter) : allJobs;
-  if (filtered.length === 0) { container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px;">✨ New jobs coming soon. Take a course & unlock hidden roles!</div>`; return; }
-  container.innerHTML = filtered.map(job => `
-    <div class="job-card" data-job-id="${job.id}">
-      <h4><i class="fas fa-briefcase"></i> ${job.title}</h4>
-      <p style="color: var(--ethio-green); font-weight:600;">${job.company}</p>
-      <p><i class="fas fa-map-marker-alt"></i> ${job.location} &nbsp;| 💰 ${job.salary}</p>
-      <p style="font-size:0.9rem; margin:12px 0;">${job.desc}</p>
-      <button class="btn-outline learn-apply-btn" data-job-id="${job.id}" style="padding:6px 14px;"><i class="fas fa-graduation-cap"></i> Learn & Apply</button>
-    </div>
-  `).join('');
-  const label = document.getElementById("activeFilterLabel");
-  if (label) label.innerText = currentCategoryFilter ? `🔥 ${currentCategoryFilter.toUpperCase()} jobs (matched by AI)` : `📢 All open positions (${allJobs.length}+ live)`;
-
-  document.querySelectorAll('.learn-apply-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const jobId = parseInt(btn.getAttribute('data-job-id'));
-      const job = allJobs.find(j => j.id === jobId);
-      if (job) showJobDetail(job);
+  
+  try {
+    const allJobs = await getAllJobs(currentCategoryFilter);
+    
+    if (allJobs.length === 0) { 
+      container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px;">✨ New jobs coming soon. Take a course & unlock hidden roles!</div>`; 
+      return; 
+    }
+    
+    container.innerHTML = allJobs.map(job => `
+      <div class="job-card" data-job-id="${job.id}">
+        <h4><i class="fas fa-briefcase"></i> ${job.title}</h4>
+        <p style="color: var(--ethio-green); font-weight:600;">${job.company}</p>
+        <p><i class="fas fa-map-marker-alt"></i> ${job.location} &nbsp;| 💰 ${job.salary}</p>
+        <p style="font-size:0.9rem; margin:12px 0;">${job.description}</p>
+        <button class="btn-outline learn-apply-btn" data-job-id="${job.id}" style="padding:6px 14px;"><i class="fas fa-graduation-cap"></i> Learn & Apply</button>
+      </div>
+    `).join('');
+    
+    const label = document.getElementById("activeFilterLabel");
+    if (label) label.innerText = currentCategoryFilter ? `🔥 ${currentCategoryFilter.toUpperCase()} jobs (matched by AI)` : `📢 All open positions (${allJobs.length}+ live)`;
+    
+    document.querySelectorAll('.learn-apply-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const jobId = btn.getAttribute('data-job-id');
+        const job = await getJobById(jobId);
+        if (job) {
+          showJobDetail(job);
+        }
+      });
     });
-  });
+  } catch (error) {
+    console.error('Error loading jobs:', error);
+    container.innerHTML = '<div style="text-align:center; padding:40px;">Error loading jobs. Please refresh the page.</div>';
+  }
 }
 
 function showJobDetail(job) {
@@ -379,7 +684,7 @@ function showJobDetail(job) {
     </div>
     <div class="job-description">
       <h3>Job Description</h3>
-      <p>${job.desc}</p>
+      <p>${job.description}</p>
       <h3 style="margin-top: 20px;">Requirements</h3>
       <p>${job.requirements || "• Relevant experience\n• Strong communication skills\n• Passion for growth"}</p>
       <h3 style="margin-top: 20px;">Benefits</h3>
@@ -387,26 +692,41 @@ function showJobDetail(job) {
     </div>
     <div class="apply-section">
       <button id="applyNowBtn" class="btn-primary"><i class="fab fa-telegram"></i> Apply via Telegram Bot</button>
-      <p style="margin-top: 12px; font-size: 0.85rem;">Clicking will open <strong>@SkillSwapEthiopiaBot</strong> on Telegram. Complete your application there.</p>
+      <p style="margin-top: 12px; font-size: 0.85rem;">Clicking will open <strong>@SkillSwapEt_bot</strong> on Telegram. Complete your application there.</p>
     </div>
   `;
   document.getElementById('applyNowBtn')?.addEventListener('click', () => {
-    window.open('https://t.me/SkillSwapEthiopiaBot', '_blank');
+    window.open('https://t.me/SkillSwapEt_bot', '_blank');
   });
   showPage('jobdetail');
 }
 
-document.getElementById("resetJobsBtn")?.addEventListener("click", () => { currentCategoryFilter = null; renderJobs(); });
+document.getElementById("resetJobsBtn")?.addEventListener("click", () => { 
+  currentCategoryFilter = null; 
+  renderJobs(); 
+});
 document.getElementById("backToJobsBtn")?.addEventListener("click", () => showPage('jobs'));
-renderJobs();
 
-
+// ==================== AI Test Function ====================
 document.getElementById("runAiTestBtn")?.addEventListener("click", () => {
   const selectedInterest = document.querySelector('#aitest-page input[name="interest"]:checked');
-  if (!selectedInterest) { alert("🇪🇹 Please select your main interest field to unlock AI job match!"); return; }
+  if (!selectedInterest) { 
+    alert("🇪🇹 Please select your main interest field to unlock AI job match!"); 
+    return; 
+  }
   const category = selectedInterest.value;
-  const jobRoleMap = { tech: "Software Developer, IT Support, Data Analyst", design: "UI/UX Designer, Graphic Artist", agri: "Agronomist, Farm Manager", business: "Business Analyst, Project Manager" };
-  const courseMap = { tech: "🎓 Recommended: Full Stack Web Dev", design: "🎨 Recommended: Professional Design Masterclass", agri: "🌱 Recommended: Smart Farming & Agribusiness", business: "📈 Recommended: Business Leadership & Sales Track" };
+  const jobRoleMap = { 
+    tech: "Software Developer, IT Support, Data Analyst", 
+    design: "UI/UX Designer, Graphic Artist", 
+    agri: "Agronomist, Farm Manager", 
+    business: "Business Analyst, Project Manager" 
+  };
+  const courseMap = { 
+    tech: "🎓 Recommended: Full Stack Web Dev", 
+    design: "🎨 Recommended: Professional Design Masterclass", 
+    agri: "🌱 Recommended: Smart Farming & Agribusiness", 
+    business: "📈 Recommended: Business Leadership & Sales Track" 
+  };
   document.getElementById("aiMatchText").innerHTML = `<i class="fas fa-microchip"></i> ✅ AI analysis: You're a perfect fit for ${jobRoleMap[category]}.`;
   document.getElementById("aiRecommendCourse").innerHTML = `<div style="margin-top:12px;"><i class="fas fa-book-open"></i> ${courseMap[category]}</div><div>✨ Matched jobs updated below!</div>`;
   document.getElementById("aiResultContainer").style.display = "block";
@@ -418,6 +738,7 @@ document.getElementById("runAiTestBtn")?.addEventListener("click", () => {
 
 const courses = {
   webdev: {
+    id: "webdev",
     title: "Full-Stack Web Development",
     description: "Master modern web development with MERN stack (MongoDB, Express, React, Node.js) and AI tools. This course prepares you for high-demand tech roles with job guarantee.",
     lectures: [
@@ -434,16 +755,13 @@ const courses = {
       { title: "HTML & CSS Full Course (freeCodeCamp)", url: "https://youtu.be/mU6anWqZJcc" },
       { title: "JavaScript Full Course (freeCodeCamp)", url: "https://youtu.be/PkZNo7MFNFg" },
       { title: "React JS Course (Traversy Media)", url: "https://youtu.be/w7ejDZ8SWv8" },
-      { title: "Node.js & Express Crash Course (Traversy Media)", url: "https://youtu.be/fBNz5xF-Kx4" },
-      { title: "MongoDB Full Course (freeCodeCamp)", url: "https://youtu.be/2QQGWYe7IDU" },
-      { title: "MERN Stack Tutorial (freeCodeCamp)", url: "https://youtu.be/7CqJlxBYj-M" },
-      { title: "Deploy MERN App to Heroku", url: "https://youtu.be/4D1MkwYfJfo" },
-      { title: "AI for Web Developers (Google AI)", url: "https://youtu.be/1f1h0_uvmUY" }
+      { title: "Node.js & Express Crash Course (Traversy Media)", url: "https://youtu.be/fBNz5xF-Kx4" }
     ],
     pdfUrl: "https://t.me/skillswapethiopia",
     telegramGroup: "https://t.me/skillswapethiopia"
   },
   marketing: {
+    id: "marketing",
     title: "Digital Marketing",
     description: "Learn SEO, Social Media Marketing, Email Campaigns, and Analytics. Get certified and land internships with top Ethiopian brands.",
     lectures: [
@@ -452,71 +770,45 @@ const courses = {
       "Social Media Strategy (Facebook, Instagram, TikTok)",
       "Content Marketing & Blogging",
       "Email Marketing & Automation",
-      "Google Analytics & Data Insights",
-      "Paid Advertising (Google Ads, Meta Ads)",
-      "E-commerce Marketing"
+      "Google Analytics & Data Insights"
     ],
     videos: [
       { title: "Digital Marketing Full Course (Google)", url: "https://youtu.be/7bNPg8UbhaE" },
-      { title: "SEO Tutorial for Beginners (Ahrefs)", url: "https://youtu.be/9tH6KhZ4KdU" },
-      { title: "Social Media Marketing 2024 (Neil Patel)", url: "https://youtu.be/IO9p8c7dC-A" },
-      { title: "Content Marketing Masterclass (HubSpot)", url: "https://youtu.be/0tVJqVW_OGU" },
-      { title: "Email Marketing with Mailchimp", url: "https://youtu.be/0B5rUy7t3M4" },
-      { title: "Google Analytics 4 Tutorial", url: "https://youtu.be/4bq-WZqTXr4" },
-      { title: "Google Ads Complete Course", url: "https://youtu.be/2U2z7VjYxTo" },
-      { title: "E-commerce Marketing Strategies", url: "https://youtu.be/3bFv2M7JhAg" }
+      { title: "SEO Tutorial for Beginners (Ahrefs)", url: "https://youtu.be/9tH6KhZ4KdU" }
     ],
     pdfUrl: "https://t.me/skillswapethiopia",
     telegramGroup: "https://t.me/skillswapethiopia"
   },
   agritech: {
+    id: "agritech",
     title: "Smart Farming & Agri-tech",
     description: "Modern agriculture techniques, irrigation systems, drone technology, and agribusiness management. Direct placement with cooperatives.",
     lectures: [
       "Introduction to Precision Agriculture",
       "Soil Science & Crop Management",
       "Irrigation Systems & Water Management",
-      "Drone Technology in Farming",
-      "Agribusiness & Marketing",
-      "Sustainable Farming Practices",
-      "Digital Tools for Farmers",
-      "Access to Finance & Government Programs"
+      "Drone Technology in Farming"
     ],
     videos: [
       { title: "Precision Agriculture Overview", url: "https://youtu.be/8Kq-8iR6F6I" },
-      { title: "Soil Health & Management", url: "https://youtu.be/URjQbHpBQ7U" },
-      { title: "Modern Irrigation Techniques", url: "https://youtu.be/0jPvSb6jF0U" },
-      { title: "Drones in Agriculture (DJI)", url: "https://youtu.be/Ph9bS2zA9Lg" },
-      { title: "Agribusiness Marketing", url: "https://youtu.be/7Gd7QaU2fMk" },
-      { title: "Sustainable Farming Practices", url: "https://youtu.be/6vGt4-1Z0aI" },
-      { title: "Digital Tools for Farmers (FAO)", url: "https://youtu.be/3J8Z7T0uM8w" },
-      { title: "Agricultural Finance & Grants", url: "https://youtu.be/4A1Rq1VqH7k" }
+      { title: "Soil Health & Management", url: "https://youtu.be/URjQbHpBQ7U" }
     ],
     pdfUrl: "https://t.me/skillswapethiopia",
     telegramGroup: "https://t.me/skillswapethiopia"
   },
   business: {
+    id: "business",
     title: "Business Management & Leadership",
     description: "Project management, finance, entrepreneurship, and leadership skills. Guaranteed interview with partner firms upon completion.",
     lectures: [
       "Introduction to Business Management",
       "Strategic Planning & Decision Making",
       "Financial Management Basics",
-      "Project Management (Agile, Scrum)",
-      "Marketing & Sales Strategy",
-      "Human Resources & Team Leadership",
-      "Entrepreneurship & Startup Culture",
-      "Business Ethics & Corporate Governance"
+      "Project Management (Agile, Scrum)"
     ],
     videos: [
       { title: "Business Management 101 (Crash Course)", url: "https://youtu.be/9HxGcL1Y1LA" },
-      { title: "Strategic Planning (Harvard)", url: "https://youtu.be/5g9jRrC9J0U" },
-      { title: "Financial Management Basics", url: "https://youtu.be/6X7pLkG2R4c" },
-      { title: "Project Management Full Course (Google)", url: "https://youtu.be/3WrNpJ-Po1U" },
-      { title: "Marketing Strategy (Kotler)", url: "https://youtu.be/3FpU8eC7FJg" },
-      { title: "Leadership & HR (Simon Sinek)", url: "https://youtu.be/ILJfJq4_3lE" },
-      { title: "Entrepreneurship 101 (Stanford)", url: "https://youtu.be/2P6d6p7KjGc" },
-      { title: "Business Ethics (TEDx)", url: "https://youtu.be/1o5VZgQzC1c" }
+      { title: "Strategic Planning (Harvard)", url: "https://youtu.be/5g9jRrC9J0U" }
     ],
     pdfUrl: "https://t.me/skillswapethiopia",
     telegramGroup: "https://t.me/skillswapethiopia"
@@ -639,10 +931,32 @@ if (sendBtn) {
 }
 
 
-loadUsers();
-currentUser = getCurrentUser();
-updateUIForUser();
-if (currentUser && currentUser.interest) {
-  currentCategoryFilter = currentUser.interest;
-  renderJobs();
+async function init() {
+  try {
+    // Initialize database
+    await initDatabase();
+    console.log('✅ Database initialized');
+    
+    // Seed initial data
+    await seedInitialData();
+    console.log('✅ Initial data seeded');
+    
+    // Get current user from session
+    currentUser = await getCurrentUserFromDB();
+    console.log('Current user:', currentUser ? currentUser.name : 'None');
+    
+    updateUIForUser();
+    if (currentUser && currentUser.interest) {
+      currentCategoryFilter = currentUser.interest;
+    }
+    
+    await renderJobs();
+    console.log('✅ Application ready');
+  } catch (error) {
+    console.error('Initialization error:', error);
+    alert('Error initializing app: ' + error.message);
+  }
 }
+
+
+init();
